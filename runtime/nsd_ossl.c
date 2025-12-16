@@ -318,8 +318,11 @@ static rsRetVal osslInitSession(nsd_ossl_t *pThis, osslSslState_t osslType) /* ,
         }
     }
 
-    /* Create BIO from ptcp socket! */
-    conn = BIO_new_socket(pPtcp->sock, BIO_CLOSE /*BIO_NOCLOSE*/);
+    /* Create BIO from ptcp socket!
+     * Use BIO_NOCLOSE to prevent OpenSSL from closing the socket when
+     * SSL_free is called. The socket is owned and will be closed by ptcp.
+     */
+    conn = BIO_new_socket(pPtcp->sock, BIO_NOCLOSE);
     dbgprintf("osslInitSession: Init conn BIO[%p] done\n", (void *)conn);
 
     /* Set debug Callback for conn BIO as well! */

@@ -485,6 +485,18 @@ BEGINobjDestruct(nsd_ossl) /* be sure to specify the object type also in END and
     /* TODO MOVE Free SSL obj also if we do not have a session - or are NOT in TLS mode! */
     if (pThis->pNetOssl->ssl != NULL) {
         DBGPRINTF("nsd_ossl_destruct: [%p] FREE pThis->pNetOssl->ssl \n", pThis);
+        /* If pTcp is NULL, we need to close the socket ourselves by getting it from the BIO */
+        if (pThis->pTcp == NULL) {
+            BIO *bio = SSL_get_rbio(pThis->pNetOssl->ssl);
+            if (bio != NULL) {
+                int fd = -1;
+                BIO_get_fd(bio, &fd);
+                if (fd != -1) {
+                    close(fd);
+                    DBGPRINTF("nsd_ossl_destruct: [%p] closed socket fd %d (pTcp was NULL)\n", pThis, fd);
+                }
+            }
+        }
         SSL_free(pThis->pNetOssl->ssl);
         pThis->pNetOssl->ssl = NULL;
     }
